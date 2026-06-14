@@ -15,7 +15,8 @@
     "mongoose": "^8.4.0",
     "@auth/mongodb-adapter": "^3.3.0",
     "mongodb": "^6.7.0",
-    "pdfjs-dist": "^3.11.174"
+    "pdfjs-dist": "^3.11.174",
+    "razorpay": "^2.9.2"
   },
   "devDependencies": {
     "typescript": "^5",
