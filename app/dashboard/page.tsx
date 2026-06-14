@@ -161,12 +161,19 @@ export default function Dashboard() {
 
   function copyText() {
     const th = totalHours(), td = th / hoursPerDay
-    let t = `UPSC Reading Plan — ${session?.user?.name}\n${'='.repeat(40)}\n`
-    t += `Total: ${Math.round(totalPages()).toLocaleString()} pages | ${Math.round(th)} hours | ${Math.round(td)} days\n\n`
+    let t = `UPSC Reading Plan — ${session?.user?.name}
+${'='.repeat(40)}
+`
+    t += `Total: ${Math.round(totalPages()).toLocaleString()} pages | ${Math.round(th)} hours | ${Math.round(td)} days
+
+`
     data.forEach(p => {
-      t += `${p.paper}: ${paperPages(p)}p / ${Math.round(paperHours(p))}h / ${Math.round(paperHours(p) / hoursPerDay)} days\n`
-      p.subjects.forEach((s: any) => { t += `  • ${s.name}: ${subjPages(s)}p\n` })
-      t += '\n'
+      t += `${p.paper}: ${paperPages(p)}p / ${Math.round(paperHours(p))}h / ${Math.round(paperHours(p) / hoursPerDay)} days
+`
+      p.subjects.forEach((s: any) => { t += `  • ${s.name}: ${subjPages(s)}p
+` })
+      t += '
+'
     })
     navigator.clipboard.writeText(t).then(() => showToast('Copied to clipboard ✓'))
   }
