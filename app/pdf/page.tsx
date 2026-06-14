@@ -22,8 +22,6 @@ export default function PDFReader() {
 
   const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
   const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-  const RZP_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
-
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
     if (session) { fetchBooks(); checkPro() }
@@ -123,43 +121,9 @@ export default function PDFReader() {
     }
   }
 
-  async function startPayment() {
-    setPayLoading(true)
-    try {
-      const res = await fetch('/api/subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create' }) })
-      const { subscriptionId, error } = await res.json()
-      if (error) { showToast('Error: ' + error); setPayLoading(false); return }
-
-      const rzp = new (window as any).Razorpay({
-        key: RZP_KEY,
-        subscription_id: subscriptionId,
-        name: 'UPSC Reading Planner',
-        description: 'Pro Plan — Unlimited PDF uploads',
-        image: 'https://upsc-reading-planner.vercel.app/favicon.ico',
-        prefill: { name: session?.user?.name, email: session?.user?.email },
-        theme: { color: '#2563eb' },
-        handler: async (response: any) => {
-          const verify = await fetch('/api/subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'verify', ...response })
-          })
-          const v = await verify.json()
-          if (v.ok) {
-            setIsPro(true)
-            setShowPaywall(false)
-            showToast('Pro activated! Upload unlimited PDFs ✓')
-          } else {
-            showToast('Payment verification failed — contact support')
-          }
-        }
-      })
-      rzp.open()
-    } catch (err: any) {
-      showToast('Payment error: ' + err.message)
-    } finally {
-      setPayLoading(false)
-    }
+  function startPayment() {
+    // Redirect to Cashfree hosted payment form
+    window.location.href = 'https://payments.cashfree.com/forms/upscplanner'
   }
 
   function startReading(book: any) {
@@ -209,9 +173,6 @@ export default function PDFReader() {
   return (
     <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", background:'#f8fafc', minHeight:'100vh' }}>
 
-      {/* Razorpay script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js" />
-
       {/* Header */}
       <div style={{ background:'linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1d4ed8 100%)', color:'white', padding:'20px 24px' }}>
         <div style={{ maxWidth:900, margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
@@ -249,10 +210,15 @@ export default function PDFReader() {
                   ✅ Cancel anytime
                 </div>
               </div>
-              <button onClick={startPayment} disabled={payLoading}
-                style={{ width:'100%', padding:'14px', background: payLoading ? '#94a3b8' : '#2563eb', color:'white', border:'none', borderRadius:12, fontSize:16, fontWeight:700, cursor: payLoading ? 'not-allowed' : 'pointer', marginBottom:12 }}>
-                {payLoading ? 'Loading...' : 'Pay ₹49/month with Razorpay'}
-              </button>
+              <a href="https://payments.cashfree.com/forms/upscplanner" target="_parent" style={{ textDecoration:'none', display:'block', marginBottom:12 }}>
+                <div style={{ background:'#000', border:'1px solid black', borderRadius:15, display:'flex', padding:'10px 16px', cursor:'pointer', alignItems:'center', justifyContent:'center', gap:10 }}>
+                  <img src="https://cashfreelogo.cashfree.com/cashfreepayments/logosvgs/Group_4355.svg" alt="Cashfree" style={{ width:24, height:24 }} />
+                  <div>
+                    <div style={{ fontFamily:'Arial', color:'#fff', fontSize:15, fontWeight:700 }}>Pay ₹49 — Get Pro for 30 days</div>
+                    <div style={{ fontFamily:'Arial', color:'#aaa', fontSize:10 }}>UPI · Cards · Wallets · Powered by Cashfree</div>
+                  </div>
+                </div>
+              </a>
               <button onClick={() => setShowPaywall(false)} style={{ background:'none', border:'none', color:'#94a3b8', fontSize:13, cursor:'pointer' }}>Maybe later</button>
             </div>
           </div>
