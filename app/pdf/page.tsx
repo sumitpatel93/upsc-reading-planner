@@ -30,7 +30,32 @@ export default function PDFReader() {
 
   async function uploadPDF(e: any) {
     const file = e.target.files?.[0]
-    if (!file || file.type !== 'application/pdf') { showToast('Please select a PDF file'); return }
+    if (!file) return
+
+    // Check 1: file extension
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showToast('Only PDF files are allowed')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+
+    // Check 2: MIME type
+    if (file.type !== 'application/pdf' && file.type !== '') {
+      showToast('Only PDF files are allowed')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+
+    // Check 3: magic bytes — real PDFs start with %PDF
+    const header = await file.slice(0, 4).arrayBuffer()
+    const magic = new Uint8Array(header)
+    const isPDF = magic[0] === 0x25 && magic[1] === 0x50 && magic[2] === 0x44 && magic[3] === 0x46
+    if (!isPDF) {
+      showToast('This file is not a valid PDF')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+
     if (file.size > 10 * 1024 * 1024) { showToast('PDF must be under 10MB'); return }
     setUploading(true)
     try {
