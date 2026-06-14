@@ -34,16 +34,28 @@ export default function PDFReader() {
     if (file.size > 10 * 1024 * 1024) { showToast('PDF must be under 10MB'); return }
     setUploading(true)
     try {
+      // Auto-detect page count using PDF.js before uploading
+      const name = file.name.replace(/\.pdf$/i, '')
+      let pages = 0
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const pdfjsLib = await import('pdfjs-dist')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        pages = pdf.numPages
+      } catch {
+        // fallback: estimate from file size (avg ~50KB per page)
+        pages = Math.max(1, Math.round(file.size / 51200))
+      }
+
+      // Upload to Cloudinary
       const fd = new FormData()
       fd.append('file', file)
       fd.append('upload_preset', UPLOAD_PRESET || 'upsc_unsigned')
       fd.append('resource_type', 'raw')
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, { method: 'POST', body: fd })
+      const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/raw/upload', { method: 'POST', body: fd })
       const data = await res.json()
       if (!data.secure_url) throw new Error(data.error?.message || 'Upload failed')
-
-      const name = file.name.replace('.pdf', '')
-      const pages = parseInt(prompt(`How many pages does "${name}" have?`) || '0') || 100
 
       await fetch('/api/pdf', {
         method: 'POST',
@@ -51,7 +63,7 @@ export default function PDFReader() {
         body: JSON.stringify({ action: 'add_pdf', data: { name, pdfUrl: data.secure_url, totalPages: pages } })
       })
       await fetchBooks()
-      showToast('PDF uploaded ✓')
+      showToast('PDF uploaded — ' + pages + ' pages detected ✓')
     } catch (err: any) {
       showToast('Upload failed: ' + err.message)
     } finally {
