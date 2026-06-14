@@ -29,6 +29,9 @@ const PlanSchema = new Schema({
   subscriptionStatus: String,
   subscriptionExpiry: Date,
   updatedAt: { type: Date, default: Date.now },
+  // News tracking
+  newsReadCount: { type: Number, default: 0 },
+  newsReadDate: { type: Date },
 })
 
 export const Plan = models.Plan || model('Plan', PlanSchema)
