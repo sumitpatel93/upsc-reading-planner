@@ -268,7 +268,9 @@ ${'='.repeat(40)}
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={copyText} style={{ background:'white', border:'1.5px solid #e2e8f0', color:'#475569', padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>📋 Copy</button>
-            <button onClick={printPlan} style={{ background:'white', border:'1.5px solid #e2e8f0', color:'#475569', padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>🖨️ Print</button>
+            <button onClick={printPlan} style={{ background:'white', border:'1.5px solid #e2e8f0', color:'#475569', padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer' }}>🖨️ Print / Save PDF</button>
+            <button onClick={() => router.push('/pdf')}
+              style={{ background:'linear-gradient(135deg,#1e3a5f,#2563eb)', color:'white', padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, cursor:'pointer', border:'none' }}>📖 PDF Reader</button>
           </div>
         </div>
 
