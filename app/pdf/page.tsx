@@ -220,7 +220,7 @@ export default function PDFReader() {
           <div style={{fontSize:11,color:'#94a3b8',marginBottom:16,padding:'8px',background:'#fffbeb',borderRadius:8,border:'1px solid #fcd34d'}}>
             ⚠️ Only upload PDFs you own or have rights to use. Don't upload copyrighted books without permission.
           </div>
-          <input ref={fileRef} type="file" accept=".pdf" onChange={uploadPDF} style={{display:'none'}} id="pdfInput" />
+          <input ref={fileRef} type="file" accept="application/pdf,.pdf" onChange={uploadPDF} style={{display:'none'}} id="pdfInput" />
           <button onClick={() => fileRef.current?.click()} disabled={uploading}
             style={{background: uploading ? '#94a3b8' : '#2563eb',color:'white',border:'none',padding:'12px 28px',borderRadius:10,fontSize:14,fontWeight:700,cursor: uploading ? 'not-allowed' : 'pointer'}}>
             {uploading ? '⏳ Uploading...' : '+ Upload PDF'}
