@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]/route'
 import { connectDB } from '@/lib/mongodb'
 import { Plan } from '@/lib/models'
 import { DEFAULTS } from '@/lib/defaults'
+import { sendSignupNotification } from '@/lib/email'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -21,6 +22,8 @@ export async function GET() {
       name: session.user.name,
       papers: DEFAULTS,
     })
+    // Send signup notification email (non-blocking)
+    sendSignupNotification(session.user.name || 'Unknown', session.user.email || '')
   }
 
   return NextResponse.json(plan)
