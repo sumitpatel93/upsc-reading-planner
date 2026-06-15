@@ -7,19 +7,24 @@ import { Plan } from '@/lib/models'
 const FREE_LIMIT = 10
 
 const RSS_FEEDS = [
-  { name: 'PIB', url: 'https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3' },
-  { name: 'The Hindu', url: 'https://www.thehindu.com/news/national/feeder/default.rss' },
-  { name: 'Indian Express', url: 'https://indianexpress.com/section/india/feed/' },
+  { name: 'PIB', url: 'https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3&lang=en' },
+  { name: 'PIB Economy', url: 'https://pib.gov.in/RssMain.aspx?ModId=3&Lang=1&Regid=3' },
+  { name: 'PIB Science', url: 'https://pib.gov.in/RssMain.aspx?ModId=7&Lang=1&Regid=3' },
+  { name: 'DD News', url: 'https://ddnews.gov.in/en/feed/' },
+  { name: 'Rajya Sabha TV', url: 'https://rstv.nic.in/rss.xml' },
+  { name: 'The Wire', url: 'https://thewire.in/feed' },
+  { name: 'Down To Earth', url: 'https://www.downtoearth.org.in/rss/latest' },
+  { name: 'Economic Times', url: 'https://economictimes.indiatimes.com/rssfeedsdefault.cms' },
 ]
 
 const TOPICS: Record<string, string[]> = {
-  'Polity & Governance': ['parliament','bill','act','supreme court','constitution','election','commission','government','ministry','policy','scheme','cabinet','rajya sabha','lok sabha','president','governor','judiciary','high court'],
-  'Economy': ['gdp','rbi','inflation','budget','trade','bank','fiscal','monetary','economy','finance','tax','gst','export','import','investment','growth','rupee','market','sebi'],
-  'International Relations': ['bilateral','treaty','summit','united nations','un ','foreign','diplomat','india-','visit','agreement','cooperation','g20','brics','saarc','asean','nato'],
-  'Environment & Ecology': ['climate','wildlife','forest','pollution','disaster','flood','cyclone','drought','environment','species','biodiversity','emission','carbon','renewable','solar','green'],
-  'Science & Technology': ['isro','space','satellite','ai ','artificial intelligence','nuclear','health','vaccine','covid','disease','technology','digital','cyber','research','innovation','mission'],
-  'Geography & Disaster': ['earthquake','tsunami','cyclone','flood','drought','state','district','river','dam','geography','census','population','urban','rural','migration'],
-  'History & Culture': ['heritage','asi ','archaeological','festival','tribe','art','culture','tradition','history','monument','museum','language','religion','yoga','classical'],
+  'Polity & Governance': ['parliament','bill','act','supreme court','constitution','election','commission','government','ministry','policy','scheme','cabinet','rajya sabha','lok sabha','president','governor','judiciary','high court','legislation','ordinance','amendment','federal','democratic','lok','rajya','panchayat','municipal','bureaucracy'],
+  'Economy': ['gdp','rbi','inflation','budget','trade','bank','fiscal','monetary','economy','finance','tax','gst','export','import','investment','growth','rupee','market','sebi','msme','startup','fdi','disinvestment','revenue','expenditure','subsidy','insurance','pension','loan','credit','unemployment','manufacturing','agriculture income','price','commodity'],
+  'International Relations': ['bilateral','treaty','summit','united nations','un ','foreign','diplomat','india-','visit','agreement','cooperation','g20','brics','saarc','asean','nato','imf','world bank','wto','quad','aukus','sanctions','geopolit','border','china','pakistan','usa','russia','europe','africa','indo-pacific','embassy','consul'],
+  'Environment & Ecology': ['climate','wildlife','forest','pollution','disaster','flood','cyclone','drought','environment','species','biodiversity','emission','carbon','renewable','solar','green','tiger','elephant','wetland','coral','mangrove','ozone','plastic','waste','water','air quality','aqi','net zero','cop','paris agreement'],
+  'Science & Technology': ['isro','space','satellite','artificial intelligence','nuclear','health','vaccine','disease','technology','digital','cyber','research','innovation','mission','rocket','launch','chandrayaan','gaganyaan','5g','semiconductor','quantum','biotech','pharma','drug','medicine','hospital','cancer','robot','drone','defence technology'],
+  'Geography & Disaster': ['earthquake','tsunami','cyclone','flood','drought','river','dam','geography','census','population','urban','rural','migration','landslide','glacier','himalaya','peninsula','plateau','delta','port','mineral','coal','oil','gas','irrigation','hydropower'],
+  'History & Culture': ['heritage','archaeological','festival','tribe','art','culture','tradition','history','monument','museum','language','religion','yoga','classical','craft','dance','music','uneso','intangible','ancient','medieval','colonial','freedom','independence','constitution day'],
 }
 
 function categorizeTopic(title: string, description: string): string {
@@ -38,7 +43,7 @@ async function fetchRSS(feed: { name: string; url: string }) {
     })
     const xml = await res.text()
     const items: any[] = []
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi
     let match
     while ((match = itemRegex.exec(xml)) !== null && items.length < 8) {
       const item = match[1]
@@ -46,7 +51,9 @@ async function fetchRSS(feed: { name: string; url: string }) {
       const link = item.match(/<link>(.*?)<\/link>/)?.[1] || item.match(/<guid>(.*?)<\/guid>/)?.[1] || ''
       const desc = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] || item.match(/<description>(.*?)<\/description>/)?.[1] || ''
       const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || ''
-      if (title && link) {
+      // Skip Hindi/non-English articles (detect Devanagari)
+      const hasDevanagari = /[\u0900-\u097F]/.test(title)
+      if (title && link && !hasDevanagari) {
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim(),
           link: link.trim(),
