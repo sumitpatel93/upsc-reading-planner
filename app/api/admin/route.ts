@@ -18,22 +18,13 @@ export async function GET() {
   const weekStart = new Date(now); weekStart.setDate(now.getDate() - 7)
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const [
-    allUsers,
-    todaySignups,
-    weekSignups,
-    monthSignups,
-    proUsers,
-    recentSignups,
-  ] = await Promise.all([
+  const [allUsers, todaySignups, weekSignups, monthSignups, proUsers, recentSignups] = await Promise.all([
     Plan.countDocuments(),
     Plan.countDocuments({ createdAt: { $gte: todayStart } }),
     Plan.countDocuments({ createdAt: { $gte: weekStart } }),
     Plan.countDocuments({ createdAt: { $gte: monthStart } }),
     Plan.find({ isPro: true }, { name: 1, email: 1, subscriptionExpiry: 1, subscriptionId: 1 }).sort({ subscriptionExpiry: -1 }),
-    Plan.find({}, { name: 1, email: 1, createdAt: 1, isPro: 1, pdfBooks: 1, newsReadCount: 1 })
-      .sort({ createdAt: -1 })
-      .limit(20),
+    Plan.find({}, { name: 1, email: 1, createdAt: 1, isPro: 1, pdfBooks: 1, newsReadCount: 1 }).sort({ createdAt: -1 }).limit(20),
   ])
 
   const totalPdfUploads = await Plan.aggregate([
@@ -83,16 +74,32 @@ export async function POST(req: NextRequest) {
   if (action === 'activate_pro') {
     const expiry = new Date()
     expiry.setDate(expiry.getDate() + (days || 30))
-    await Plan.findOneAndUpdate(
+    // Match by email — also reset news count so they can use news immediately
+    const result = await Plan.findOneAndUpdate(
       { email: targetEmail },
-      { isPro: true, subscriptionStatus: 'active', subscriptionExpiry: expiry, subscriptionId: 'manual_' + Date.now() },
+      {
+        isPro: true,
+        subscriptionStatus: 'active',
+        subscriptionExpiry: expiry,
+        subscriptionId: 'manual_' + Date.now(),
+        newsReadCount: 0,
+        newsReadDate: null,
+      },
       { upsert: true, new: true }
     )
-    return NextResponse.json({ ok: true, expiry })
+    return NextResponse.json({ ok: true, expiry, userId: result?.userId })
   }
 
   if (action === 'revoke_pro') {
     await Plan.findOneAndUpdate({ email: targetEmail }, { isPro: false, subscriptionStatus: 'revoked' })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (action === 'reset_news') {
+    await Plan.findOneAndUpdate(
+      { email: targetEmail },
+      { newsReadCount: 0, newsReadDate: null }
+    )
     return NextResponse.json({ ok: true })
   }
 
