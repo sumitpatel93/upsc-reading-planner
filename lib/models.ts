@@ -1,17 +1,38 @@
 import mongoose, { Schema, model, models } from 'mongoose'
 
-const BookSchema = new Schema({ id: String, name: String, pages: Number })
-const SubjectSchema = new Schema({ id: String, name: String, dense: Boolean, books: [BookSchema] })
-const PaperSchema = new Schema({ id: String, paper: String, color: String, light: String, subjects: [SubjectSchema] })
+const BookSchema = new Schema({
+  name: String,
+  pages: Number,
+})
+
+const SubjectSchema = new Schema({
+  name: String,
+  dense: Boolean,
+  books: [BookSchema],
+})
+
+const PaperSchema = new Schema({
+  paper: String,
+  color: String,
+  light: String,
+  subjects: [SubjectSchema],
+})
 
 const PdfBookSchema = new Schema({
-  id: String,
+  url: String,
   name: String,
   pdfUrl: String,
   totalPages: Number,
   pagesRead: { type: Number, default: 0 },
-  sessions: [{ pagesRead: Number, duration: Number, speed: Number, date: Date }],
-  createdAt: { type: Date, default: Date.now }
+  sessions: [
+    {
+      pagesRead: Number,
+      duration: Number,
+      speed: Number,
+      date: Date,
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
 })
 
 const PlanSchema = new Schema({
@@ -23,15 +44,16 @@ const PlanSchema = new Schema({
   hoursPerDay: { type: Number, default: 7 },
   papers: [PaperSchema],
   pdfBooks: [PdfBookSchema],
-  // Subscription fields
   isPro: { type: Boolean, default: false },
   subscriptionId: String,
   subscriptionStatus: String,
   subscriptionExpiry: Date,
+  createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  // News tracking
   newsReadCount: { type: Number, default: 0 },
   newsReadDate: { type: Date },
 })
 
-export const Plan = models.Plan || model('Plan', PlanSchema)
+const Plan = models.Plan || model('Plan', PlanSchema)
+
+export default Plan
