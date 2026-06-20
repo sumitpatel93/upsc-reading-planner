@@ -54,6 +54,6 @@ const PlanSchema = new Schema({
   newsReadDate: { type: Date },
 })
 
-const Plan = models.Plan || model('Plan', PlanSchema)
+export const Plan = models.Plan || model('Plan', PlanSchema)
 
 export default Plan
